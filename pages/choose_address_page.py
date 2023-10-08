@@ -2,7 +2,8 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from .base_page import BasePage
-
+from selenium.webdriver.support.expected_conditions import url_changes
+import time
 
 class ChooseAddrPage(BasePage):
     """
@@ -10,48 +11,42 @@ class ChooseAddrPage(BasePage):
     It contains the locators for the page's elements and methods to interact with them.
     """
     
-    # LOCATORS
-    MONTH = (By.ID, "firstName")
-    DAY = (By.ID, "lastName")
-    YEAR = (By.ID, "year")
-    GENDER = (By.ID, "gender")
-
+    #-----------------------------------------------------------------------------------------------#
+    #                                          Locators
+    #-----------------------------------------------------------------------------------------------#
     NEXT_BTN = (By.ID, "next")
    
-    FIRST_EMAIL_RADIO = (By.CSS_SELECTOR, "[role='radio'][aria-posinset='1']")
-    SECOND_EMAIL_RADIO = (By.CSS_SELECTOR, "[role='radio'][aria-posinset='2']")
-    CREATE_EMAIL_RADIO = (By.CSS_SELECTOR, "[role='radio'][aria-posinset='2']")
+    GMAIL_HEADING_TEXT = (By.ID, "headingText")
+    GMAIL_HEADING_TEXT_STRING = "Choose your Gmail address"
+    GMAIL_HEADING_TEXT_STRING_SIGN = "How you’ll sign in"
 
-    HEADING_TEXT = (By.ID, "headingText")
-    HEADING_TEXT_STRING = "Choose your Gmail address"
+    GMAIL_HEADING_SUBTEXT = (By.ID, "headingSubtext")
+    GMAIL_HEADING_SUBTEXT_STRING = "Pick a Gmail address or create your own"
+    GMAIL_HEADING_SUBTEXT_STRING_SIGN = "Create a Gmail address for signing in to your Google Account"
 
-    HEADING_SUBTEXT = (By.ID, "headingSubtext")
-    HEADING_SUBTEXT_STRING = "Pick a Gmail address or create your own"
 
     EMAIL_ERROR = (By.CSS_SELECTOR, ".o6cuMc.Jj6Lae")
     EMAIL_ERROR_STRING = "Choose a Gmail address"
 
-    def select_month(self, month_string):
-        self.select_from_dropdown(self.MONTH, month_string)
-    
-    def select_gender(self, gender_string):
-        self.select_from_dropdown(self.GENDER, gender_string)
-    
-    def enter_day(self, day):
-        self.send_key(self.DAY, day)
+    BASE_URL = "https://accounts.google.com/signup/v2/createusername"
 
-    def enter_year(self, year):
-        self.send_key(self.YEAR, year)
-    
+
+    #-----------------------------------------------------------------------------------------------#
+    #                                        Interactions
+    #-----------------------------------------------------------------------------------------------#
     def click_next(self):
         self.click_elem(self.NEXT_BTN)
+        self.wait_until_text_is_not_in_element(self.GMAIL_HEADING_TEXT, self.GMAIL_HEADING_TEXT_STRING)
+        self.wait_until_text_is_not_in_element(self.GMAIL_HEADING_TEXT_STRING, self.GMAIL_HEADING_TEXT_STRING_SIGN)
 
     def verify_email_error(self):
-        return self.verify_text_in_element(self.EMAIL_ERROR, self.EMAIL_ERROR_STRING)
+        assert self.verify_text_in_element(self.EMAIL_ERROR, self.EMAIL_ERROR_STRING)
 
 
     def verify_headingTexts(self):
         """Verifies the page heading Text equals to the expected text"""
-        return (self.verify_text_in_element(self.HEADING_TEXT, self.HEADING_TEXT_STRING
-                ) and self.verify_text_in_element(self.HEADING_SUBTEXT, self.HEADING_SUBTEXT_STRING))
+        # self.wait_until_url_contains(self.BASE_URL)
+        assert (self.verify_either_texts_in_element(self.GMAIL_HEADING_TEXT, self.GMAIL_HEADING_TEXT_STRING, self.GMAIL_HEADING_TEXT_STRING_SIGN
+                )and self.verify_either_texts_in_element(self.GMAIL_HEADING_SUBTEXT, self.GMAIL_HEADING_SUBTEXT_STRING, self.GMAIL_HEADING_SUBTEXT_STRING_SIGN))
+
 

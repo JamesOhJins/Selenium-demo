@@ -3,11 +3,8 @@ from pages.google_signup_page import SignupPage
 from pages.basic_information_page import BasicInfoPage
 from pages.choose_address_page import ChooseAddrPage
 from pages.create_account_page import CreateAccountPage
-from pages.create_password_page import CreatePasswordPage
 from utils.driver_config import get_chrome_driver
 import configparser
-
-priority = 'all'  # default value, can be changed at runtime
 
 
 driver = get_chrome_driver()
@@ -16,15 +13,27 @@ signup_page = SignupPage(driver)
 choose_addr_page = ChooseAddrPage(driver)
 basic_info_page = BasicInfoPage(driver)
 create_acct_page = CreateAccountPage(driver)
-create_pswd_page = CreatePasswordPage(driver)
 
 config = configparser.ConfigParser()
 config.read('config.ini')
+
+priority = 'all'  # all, high, medium, low
 
 first_name = config.get('SignupDetails', 'valid_first_name')
 last_name = config.get('SignupDetails', 'valid_last_name')
 username = config.get('SignupDetails', 'valid_username')
 
+def setup_signup_page():
+    # Common steps from test_TC004
+    signup_page.navigate_to_sign_in_page()
+    signup_page.select_personal_use()
+    create_acct_page.enter_first_and_last_name(first_name, last_name)
+    create_acct_page.click_next()
+    create_acct_page.wait_until_page_loaded()
+
+#-----------------------------------------------------------------------------------------------#
+#                                          TC001
+#-----------------------------------------------------------------------------------------------#
 @pytest.mark.skipif(priority not in ['all', 'high'], reason="Skipping non-high priority tests.")
 def test_TC001():
 
@@ -40,8 +49,12 @@ def test_TC001():
     create_acct_page.click_next()
 
     # Verify that the page is redirected to basic information page
-    assert basic_info_page.verify_headingTexts
+    basic_info_page.verify_basic_info_headingTexts()
 
+
+#-----------------------------------------------------------------------------------------------#
+#                                          TC002
+#-----------------------------------------------------------------------------------------------#
 @pytest.mark.skipif(priority not in ['all', 'medium'], reason="Skipping non-medium priority tests.")
 def test_TC002():
 
@@ -59,8 +72,12 @@ def test_TC002():
 
     # 6. Verify red text message
     create_acct_page.verify_name_error()
-    pass
-@pytest.mark.skipif(priority not in ['all', 'high'], reason="Skipping non-medium priority tests.")
+
+
+#-----------------------------------------------------------------------------------------------#
+#                                          TC003
+#-----------------------------------------------------------------------------------------------#
+@pytest.mark.skipif(priority not in ['all', 'medium'], reason="Skipping non-medium priority tests.")
 def test_TC003():
 
     # 1. Navigate to sign in page
@@ -75,9 +92,11 @@ def test_TC003():
 
     # 5. Verify red text message
     create_acct_page.verify_name_error()
-    pass
 
 
+#-----------------------------------------------------------------------------------------------#
+#                                          TC004
+#-----------------------------------------------------------------------------------------------#
 @pytest.mark.dependency(name="TC_004")
 @pytest.mark.skipif(priority not in ['all', 'high'], reason="Skipping non-medium priority tests.")
 def test_TC004():
@@ -96,16 +115,18 @@ def test_TC004():
     create_acct_page.click_next()
 
     # Verify the header text message
-    basic_info_page.verify_headingTexts()
-    pass
+    basic_info_page.verify_basic_info_headingTexts()
 
 
+#-----------------------------------------------------------------------------------------------#
+#                                          TC005
+#-----------------------------------------------------------------------------------------------#
 @pytest.mark.dependency(depends=["TC_004"])
-@pytest.mark.skipif(priority not in ['all', 'high'], reason="Skipping non-high priority tests.")
+@pytest.mark.skipif(priority not in ['all', 'medium'], reason="Skipping non-high priority tests.")
 def test_TC005():
 
     # 1. Run TC004
-    test_TC004
+    setup_signup_page()
 
     # 2. Press next button with empty field
     basic_info_page.click_next()
@@ -114,77 +135,104 @@ def test_TC005():
     basic_info_page.verify_date_incomplete_error()
     
 
-    pass
-
+#-----------------------------------------------------------------------------------------------#
+#                                          TC006
+#-----------------------------------------------------------------------------------------------#
 @pytest.mark.dependency(depends=["TC_004"])
-@pytest.mark.skipif(priority not in ['all', 'high'], reason="Skipping non-high priority tests.")
-def test_TC005():
-
-    # 1. Run TC004
-    test_TC004
-
-    # 2. Press next button with empty field
-    basic_info_page.click_next()
-
-    # Verify red warning text
-    basic_info_page.verify_date_incomplete_error()
-    
-    pass
-
-@pytest.mark.dependency(depends=["TC_004"])
-@pytest.mark.skipif(priority not in ['all', 'high'], reason="Skipping non-high priority tests.")
+@pytest.mark.skipif(priority not in ['all', 'medium'], reason="Skipping non-high priority tests.")
 def test_TC006():
 
     # 1. Run TC004
-    test_TC004
+    setup_signup_page()
 
-    # 2. Press next button with empty field
+    # Get tomorrow's date dictionary
+    tomorrow_date = basic_info_page.get_date_after_n_days(1)
+
+    # Unpack dictionary
+    year, month, day = tomorrow_date["year"], tomorrow_date["month"], tomorrow_date["day"]
+    
+    # 2. Enter tomorrow's date
+    basic_info_page.select_month(month)
+    basic_info_page.enter_day(day)
+    basic_info_page.enter_year(year)
+
+    # 3. Enter gender
+    basic_info_page.select_gender("Male")
+    
+    # 4. Press next button
     basic_info_page.click_next()
 
     # Verify red warning text
-    basic_info_page.verify_date_incomplete_error()
-    
-    pass
+    basic_info_page.verify_date_invalid_error()
 
 
+#-----------------------------------------------------------------------------------------------#
+#                                          TC007
+#-----------------------------------------------------------------------------------------------#
 @pytest.mark.dependency(depends=["TC_004"])
-@pytest.mark.skipif(priority not in ['all', 'high'], reason="Skipping non-high priority tests.")
+@pytest.mark.skipif(priority not in ['all', 'medium'], reason="Skipping non-high priority tests.")
 def test_TC007():
 
     # 1. Run TC004
-    test_TC004
+    setup_signup_page()
 
-    # 2. Press next button with empty field
+    # 2. Enter malformed data
+    basic_info_page.select_month(1)
+    basic_info_page.enter_day(00)
+    basic_info_page.enter_year(0000)
+
+    # 3. Press next button
     basic_info_page.click_next()
 
     # Verify red warning text
-    basic_info_page.verify_date_incomplete_error()
+    basic_info_page.verify_date_invalid_error()
     
-    pass
-# @pytest.fixture
-# def setup():
 
-#     # yield all necessary objects and configurations for tests
-#     yield {
-#         'driver': driver,
-#         'signup_page': signup_page,
-#         'choose_addr_page': choose_addr_page,
-#         'basic_info_page': basic_info_page,
-#         'create_acct_page': create_acct_page,
-#         'create_pswd_page': create_pswd_page,
-#         'first_name': first_name,
-#         'last_name': last_name,
-#         'username': username
-#     }
+#-----------------------------------------------------------------------------------------------#
+#                                          TC008
+#-----------------------------------------------------------------------------------------------#
+@pytest.mark.dependency(depends=["TC_004"])
+@pytest.mark.skipif(priority not in ['all', 'medium'], reason="Skipping non-high priority tests.")
+def test_TC008():
 
-#     # After yielding, the code below will act as a teardown function
-#     driver.quit()
+    # 1. Run TC004
+    setup_signup_page()
+
+    # 2. Enter a valid data
+    basic_info_page.select_month(1)
+    basic_info_page.enter_day(1)
+    basic_info_page.enter_year(1999)
+
+    # 3. Press next button
+    basic_info_page.click_next()
+
+    # Verify red warning text
+    basic_info_page.verify_gender_error()
+    
+
+#-----------------------------------------------------------------------------------------------#
+#                                          TC009
+# -----------------------------------------------------------------------------------------------#
+# @pytest.mark.dependency(depends=["TC_004"])
+@pytest.mark.skipif(priority not in ['all', 'high'], reason="Skipping non-high priority tests.")
+def test_TC009():
+
+    # 1. Run TC004
+    setup_signup_page()
+
+    # 2. Enter a valid data
+    basic_info_page.select_month(1)
+    basic_info_page.enter_day(1)
+    basic_info_page.enter_year(1999)
+
+     # 3. Select gender    
+    basic_info_page.select_gender("Male")
+
+    # 4. Press next button
+    basic_info_page.click_next()
 
 
-
-
-
-# def teardown_function(function, setup):
-#     # Pass setup fixture to the teardown_function
-#     driver = setup['driver']
-#     driver.quit()
+    # Verify text in page
+    choose_addr_page.verify_headingTexts()
+    
+# driver.quit()
