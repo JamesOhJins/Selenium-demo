@@ -1,6 +1,6 @@
 # Gmail Test Cases (TC) Automation
 
-This repository contains the automation of Gmail test cases (TC) for Hyperconnect using the Page Object Model (POM) design pattern. Test cases can be referred to in this 
+This repository contains the automation of Gmail test cases (TC) using the Page Object Model (POM) design pattern. Test cases can be referred to in this 
 [Google sheet](https://docs.google.com/spreadsheets/d/1A46Ju8NooTYNNOpMVlWRZYvgEOj5M-cTWn_lKyXVFJ8/edit#gid=0).
 
 ## Project Structure
